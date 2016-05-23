@@ -1,0 +1,16 @@
+<resources>
+    <string name="cast_app_id_sample">4F8B3483</string>
+    <string name="cast_app_id">B55051D1</string>
+    <string name="app_name">Pubvn Cast</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="access_token">Access Token</string>
+    <string name="search">Search</string>
+    <string name="search_query">Search Query</string>
+    <string name="cast">Cast</string>
+    <string name="no_subtitle">No Subtitle</string>
+    <string name="play_video">Play Video</string>
+    <string name="pause_video">Pause Video</string>
+    <string name="resume_video">Resume Video</string>
+</resources>
