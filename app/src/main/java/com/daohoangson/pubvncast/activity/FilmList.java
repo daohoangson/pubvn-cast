@@ -1,18 +1,23 @@
 package com.daohoangson.pubvncast.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
+import com.android.volley.toolbox.NetworkImageView;
 import com.daohoangson.pubvncast.R;
 import com.daohoangson.pubvncast.networking.DeoDungNua;
 import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
+import com.daohoangson.pubvncast.networking.VolleyAbstract;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -45,8 +50,9 @@ public class FilmList extends Networking implements AdapterView.OnItemClickListe
 
         mAccessToken = intent.getStringExtra(INTENT_EXTRA_ACCESS_TOKEN);
 
+        @SuppressWarnings("unchecked")
         ArrayList<DeoDungNua.Film> films = (ArrayList<DeoDungNua.Film>) intent.getSerializableExtra(INTENT_EXTRA_FILMS);
-        mAdapter = new FilmAdapter(this, android.R.layout.simple_list_item_1, films);
+        mAdapter = new FilmAdapter(this, R.layout.list_item_text_and_image, films);
         mList.setAdapter(mAdapter);
     }
 
@@ -77,13 +83,47 @@ public class FilmList extends Networking implements AdapterView.OnItemClickListe
     }
 
     private static class FilmAdapter extends ArrayAdapter<DeoDungNua.Film> {
-        public FilmAdapter(Context context, int resource, List<DeoDungNua.Film> objects) {
-            super(context, resource, objects);
+
+        private Networking mActivity;
+        private LayoutInflater mInflater;
+
+        public FilmAdapter(Networking activity, int resource, List<DeoDungNua.Film> objects) {
+            super(activity, resource, objects);
+
+            mActivity = activity;
         }
 
+        @SuppressLint("InflateParams")
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            return super.getView(position, convertView, parent);
+            ViewHolder viewHolder;
+            DeoDungNua.Film film = getItem(position);
+
+            if (convertView == null) {
+                if (mInflater == null) {
+                    mInflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                }
+
+                convertView = mInflater.inflate(R.layout.list_item_text_and_image, null);
+                viewHolder = new ViewHolder();
+                viewHolder.networkImageView = (NetworkImageView) convertView.findViewById(R.id.imageView);
+                viewHolder.textView = (TextView) convertView.findViewById(R.id.textView);
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
+            }
+
+            viewHolder.networkImageView.setImageUrl(film.thumb, VolleyAbstract.getInstance(mActivity).getImageLoader());
+            viewHolder.textView.setText(film.toString());
+
+            return convertView;
+        }
+
+        private static class ViewHolder {
+            NetworkImageView networkImageView;
+            TextView textView;
         }
     }
+
+
 }

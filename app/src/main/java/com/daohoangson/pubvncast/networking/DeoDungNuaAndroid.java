@@ -72,10 +72,11 @@ public class DeoDungNuaAndroid {
                             film.id = responsePhimOne.getString("filmID");
                             film.name = responsePhimOne.getString("filmName");
                             film.thumb = responsePhimOne.getString("filmThumb");
+                            film.thumb = CorsProxy.buildUrl(film.thumb);
 
                             films.add(film);
                         }
-                    } catch (JSONException e) {
+                    } catch (JSONException | UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
                 }

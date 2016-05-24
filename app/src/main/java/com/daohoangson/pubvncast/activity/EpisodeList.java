@@ -1,11 +1,9 @@
 package com.daohoangson.pubvncast.activity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -16,7 +14,6 @@ import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class EpisodeList extends Networking implements AdapterView.OnItemClickListener, DeoDungNua.FilmListener<DeoDungNua.Media> {
 
@@ -24,7 +21,7 @@ public class EpisodeList extends Networking implements AdapterView.OnItemClickLi
     public static final String INTENT_EXTRA_EPISODES = "episodes";
 
     private ListView mList;
-    private EpisodeAdapter mAdapter;
+    private ArrayAdapter<DeoDungNua.Episode> mAdapter;
     private String mAccessToken;
 
     @Override
@@ -45,8 +42,9 @@ public class EpisodeList extends Networking implements AdapterView.OnItemClickLi
 
         mAccessToken = intent.getStringExtra(INTENT_EXTRA_ACCESS_TOKEN);
 
+        @SuppressWarnings("unchecked")
         ArrayList<DeoDungNua.Episode> episodes = (ArrayList<DeoDungNua.Episode>) intent.getSerializableExtra(INTENT_EXTRA_EPISODES);
-        mAdapter = new EpisodeAdapter(this, android.R.layout.simple_list_item_1, episodes);
+        mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, episodes);
         mList.setAdapter(mAdapter);
 
         if (mAdapter.getCount() > 0) {
@@ -78,16 +76,5 @@ public class EpisodeList extends Networking implements AdapterView.OnItemClickLi
         Intent player = new Intent(this, Player.class);
         player.putExtra(Player.INTENT_EXTRA_MEDIA, data);
         startActivity(player);
-    }
-
-    private static class EpisodeAdapter extends ArrayAdapter<DeoDungNua.Episode> {
-        public EpisodeAdapter(Context context, int resource, List<DeoDungNua.Episode> objects) {
-            super(context, resource, objects);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            return super.getView(position, convertView, parent);
-        }
     }
 }
