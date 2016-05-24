@@ -26,6 +26,7 @@ public class DeoDungNuaAndroid {
                 root,
                 URLEncoder.encode(username, "utf-8"),
                 URLEncoder.encode(passwordMd5, "utf-8"));
+        url = CorsProxy.buildUrl(url);
         JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -56,6 +57,7 @@ public class DeoDungNuaAndroid {
                 root,
                 URLEncoder.encode(searchQuery, "utf-8"),
                 URLEncoder.encode(accessToken, "utf-8"));
+        url = CorsProxy.buildUrl(url);
         JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -95,6 +97,7 @@ public class DeoDungNuaAndroid {
                 root,
                 URLEncoder.encode(film.id, "utf-8"),
                 URLEncoder.encode(accessToken, "utf-8"));
+        url = CorsProxy.buildUrl(url);
         JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -138,6 +141,7 @@ public class DeoDungNuaAndroid {
                 URLEncoder.encode(episode.film.id, "utf-8"),
                 URLEncoder.encode(episode.id, "utf-8"),
                 URLEncoder.encode(accessToken, "utf-8"));
+        url = CorsProxy.buildUrl(url);
         JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -148,7 +152,7 @@ public class DeoDungNuaAndroid {
                         DeoDungNua.Media media = new DeoDungNua.Media();
                         media.episode = episode;
                         media.url = response.getString("movieURL");
-//                        media.url = CorsProxy.buildUrl(media.url);
+                        media.url = CorsProxy.buildUrl(media.url);
 
                         if (response.has("subtitleURL")) {
                             JSONObject responseSubtitles = response.getJSONObject("subtitleURL");
@@ -159,9 +163,11 @@ public class DeoDungNuaAndroid {
                                 DeoDungNua.Subtitle subtitle = new DeoDungNua.Subtitle();
                                 subtitle.languageCode = "vietnam".equals(name) ? "vi" : "en";
                                 subtitle.languageName = responseSubtitle.getString("languageName");
-                                subtitle.url = PubvnDecodeSrt.buildUrl(responseSubtitle.getJSONObject("subtitleData").getString("bottom"));
+                                subtitle.url = responseSubtitle.getJSONObject("subtitleData").getString("bottom");
+                                subtitle.url = CorsProxy.buildUrl(subtitle.url);
+                                subtitle.url = PubvnDecodeSrt.buildUrl(subtitle.url);
 
-//                                media.subtitles.add(subtitle);
+                                media.subtitles.add(subtitle);
                             }
                         }
 
