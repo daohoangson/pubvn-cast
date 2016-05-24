@@ -2,6 +2,7 @@
     <string name="cast_app_id_sample">4F8B3483</string>
     <string name="cast_app_id">B55051D1</string>
     <string name="app_name">Pubvn Cast</string>
+    <string name="please_wait">Please wait…</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="login">Login</string>

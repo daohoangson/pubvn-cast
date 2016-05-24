@@ -2,7 +2,6 @@ package com.daohoangson.pubvncast.activity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -10,12 +9,12 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.daohoangson.pubvncast.R;
-import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
 import com.daohoangson.pubvncast.networking.DeoDungNua;
+import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
 
 import java.io.UnsupportedEncodingException;
 
-public class Login extends AppCompatActivity implements DeoDungNua.FilmListener<String> {
+public class Login extends Networking implements DeoDungNua.FilmListener<String> {
 
     public static final String RESULT_ACCESS_TOKEN = "accessToken";
     public static final String PREF_USERNAME = "username";

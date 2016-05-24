@@ -2,7 +2,6 @@ package com.daohoangson.pubvncast.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -12,14 +11,14 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.daohoangson.pubvncast.R;
-import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
 import com.daohoangson.pubvncast.networking.DeoDungNua;
+import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FilmList extends AppCompatActivity implements AdapterView.OnItemClickListener, DeoDungNua.FilmListener<ArrayList<DeoDungNua.Episode>> {
+public class FilmList extends Networking implements AdapterView.OnItemClickListener, DeoDungNua.FilmListener<ArrayList<DeoDungNua.Episode>> {
 
     public static final String INTENT_EXTRA_ACCESS_TOKEN = "accessToken";
     public static final String INTENT_EXTRA_FILMS = "films";

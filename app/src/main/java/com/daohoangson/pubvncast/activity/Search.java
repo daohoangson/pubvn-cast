@@ -2,7 +2,6 @@ package com.daohoangson.pubvncast.activity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -16,8 +15,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.daohoangson.pubvncast.R;
-import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
 import com.daohoangson.pubvncast.networking.DeoDungNua;
+import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -25,7 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class Search extends AppCompatActivity implements DeoDungNua.FilmListener<ArrayList<DeoDungNua.Film>> {
+public class Search extends Networking implements DeoDungNua.FilmListener<ArrayList<DeoDungNua.Film>> {
 
     public static final int REQUEST_CODE_LOGIN = 1;
     public static final String PREF_ACCESS_TOKEN = "accessToken";

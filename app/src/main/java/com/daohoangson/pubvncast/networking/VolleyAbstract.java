@@ -8,6 +8,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
+import com.daohoangson.pubvncast.activity.Networking;
 
 public class VolleyAbstract {
     private static VolleyAbstract mInstance;
@@ -50,7 +51,10 @@ public class VolleyAbstract {
         return mRequestQueue;
     }
 
-    public <T> void addToRequestQueue(Request<T> req) {
+    public <T> void addToRequestQueue(Networking activity, Request<T> req) {
+        activity.showProgressDialog(req.getUrl());
+
+        req.setTag(activity);
         getRequestQueue().add(req);
     }
 

@@ -1,11 +1,11 @@
 package com.daohoangson.pubvncast.networking;
 
-import android.content.Context;
 import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.daohoangson.pubvncast.activity.Networking;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,7 +21,7 @@ public class DeoDungNuaAndroid {
 
     public static final String root = "http://deodungnua.bup.vn/api";
 
-    public static void login(final Context context, String username, String passwordMd5, final DeoDungNua.FilmListener<String> listener) throws UnsupportedEncodingException {
+    public static void login(final Networking activity, String username, String passwordMd5, final DeoDungNua.FilmListener<String> listener) throws UnsupportedEncodingException {
         String url = String.format("%s/login/&username=%s&password=%s",
                 root,
                 URLEncoder.encode(username, "utf-8"),
@@ -45,14 +45,14 @@ public class DeoDungNuaAndroid {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, error.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, error.toString(), Toast.LENGTH_LONG).show();
             }
         });
 
-        VolleyAbstract.getInstance(context).addToRequestQueue(request);
+        VolleyAbstract.getInstance(activity).addToRequestQueue(activity, request);
     }
 
-    public static void fetchFilms(final Context context, String searchQuery, String accessToken, final DeoDungNua.FilmListener<ArrayList<DeoDungNua.Film>> listener) throws UnsupportedEncodingException {
+    public static void fetchFilms(final Networking activity, String searchQuery, String accessToken, final DeoDungNua.FilmListener<ArrayList<DeoDungNua.Film>> listener) throws UnsupportedEncodingException {
         String url = String.format("%s/filmlist/&q=%s&accesstoken=%s",
                 root,
                 URLEncoder.encode(searchQuery, "utf-8"),
@@ -85,14 +85,14 @@ public class DeoDungNuaAndroid {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, error.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, error.toString(), Toast.LENGTH_LONG).show();
             }
         });
 
-        VolleyAbstract.getInstance(context).addToRequestQueue(request);
+        VolleyAbstract.getInstance(activity).addToRequestQueue(activity, request);
     }
 
-    public static void fetchEpisodes(final Context context, final DeoDungNua.Film film, String accessToken, final DeoDungNua.FilmListener<ArrayList<DeoDungNua.Episode>> listener) throws UnsupportedEncodingException {
+    public static void fetchEpisodes(final Networking activity, final DeoDungNua.Film film, String accessToken, final DeoDungNua.FilmListener<ArrayList<DeoDungNua.Episode>> listener) throws UnsupportedEncodingException {
         String url = String.format("%s/filmdetail/&id=%s&accesstoken=%s",
                 root,
                 URLEncoder.encode(film.id, "utf-8"),
@@ -129,14 +129,14 @@ public class DeoDungNuaAndroid {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, error.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, error.toString(), Toast.LENGTH_LONG).show();
             }
         });
 
-        VolleyAbstract.getInstance(context).addToRequestQueue(request);
+        VolleyAbstract.getInstance(activity).addToRequestQueue(activity, request);
     }
 
-    public static void fetchMedia(final Context context, final DeoDungNua.Episode episode, String accessToken, final DeoDungNua.FilmListener<DeoDungNua.Media> listener) throws UnsupportedEncodingException {
+    public static void fetchMedia(final Networking activity, final DeoDungNua.Episode episode, String accessToken, final DeoDungNua.FilmListener<DeoDungNua.Media> listener) throws UnsupportedEncodingException {
         String url = String.format("http://pub.vn/api/android/&mov_id=%s&eps_id=%s&accesstoken=%s",
                 URLEncoder.encode(episode.film.id, "utf-8"),
                 URLEncoder.encode(episode.id, "utf-8"),
@@ -185,11 +185,11 @@ public class DeoDungNuaAndroid {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, error.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, error.toString(), Toast.LENGTH_LONG).show();
             }
         });
 
-        VolleyAbstract.getInstance(context).addToRequestQueue(request);
+        VolleyAbstract.getInstance(activity).addToRequestQueue(activity, request);
     }
 
     public static String md5(String in) {
