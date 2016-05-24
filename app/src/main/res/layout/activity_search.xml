@@ -37,4 +37,11 @@
         android:layout_below="@+id/txtSearchQuery"
         android:layout_centerHorizontal="true"
         android:text="@string/search" />
+
+    <ListView
+        android:id="@+id/listSearchQueries"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnSearch" />
+
 </RelativeLayout>
