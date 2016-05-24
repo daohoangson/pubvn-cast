@@ -19,6 +19,7 @@ import java.util.ArrayList;
 public class Search extends AppCompatActivity implements DeoDungNua.FilmListener<ArrayList<DeoDungNua.Film>> {
 
     public static final int REQUEST_CODE_LOGIN = 1;
+    public static final String PREF_ACCESS_TOKEN = "accessToken";
 
     private EditText mAccessToken;
     private EditText mSearchQuery;
@@ -29,8 +30,11 @@ public class Search extends AppCompatActivity implements DeoDungNua.FilmListener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+
         mAccessToken = (EditText) findViewById(R.id.txtAccessToken);
         assert mAccessToken != null;
+        mAccessToken.setText(preferences.getString(PREF_ACCESS_TOKEN, ""));
         mAccessToken.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,7 +76,13 @@ public class Search extends AppCompatActivity implements DeoDungNua.FilmListener
         switch (requestCode) {
             case REQUEST_CODE_LOGIN:
                 if (resultCode == RESULT_OK) {
-                    mAccessToken.setText(data.getStringExtra(Login.RESULT_ACCESS_TOKEN));
+                    String accessToken = data.getStringExtra(Login.RESULT_ACCESS_TOKEN);
+                    mAccessToken.setText(accessToken);
+
+                    SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString(PREF_ACCESS_TOKEN, accessToken);
+                    editor.apply();
                 }
                 break;
             default:
