@@ -5,12 +5,15 @@ import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.daohoangson.pubvncast.R;
 import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
@@ -61,9 +64,22 @@ public class Search extends AppCompatActivity implements DeoDungNua.FilmListener
 
         Button btnSearch = (Button) findViewById(R.id.btnSearch);
         assert btnSearch != null;
-        btnSearch.setOnClickListener(new View.OnClickListener() {
+
+        ListView lvSearchQueries = (ListView) findViewById(R.id.listSearchQueries);
+        assert lvSearchQueries != null;
+        lvSearchQueries.setAdapter(listAdapter);
+        lvSearchQueries.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String searchQuery = listAdapter.getItem(position);
+                mSearchQuery.setText(searchQuery);
+                mSearchQuery.selectAll();
+            }
+        });
+
+        final Runnable search = new Runnable() {
+            @Override
+            public void run() {
                 String accessToken = mAccessToken.getText().toString();
                 if (TextUtils.isEmpty(accessToken)) {
                     return;
@@ -81,7 +97,7 @@ public class Search extends AppCompatActivity implements DeoDungNua.FilmListener
                     searchQueries.add(listAdapter.getItem(i));
                 }
                 while (searchQueries.size() > 5) {
-                    searchQueries.remove(searchQueries.last());
+                    searchQueries.remove(searchQueries.first());
                 }
 
                 SharedPreferences.Editor editor = preferences.edit();
@@ -95,18 +111,28 @@ public class Search extends AppCompatActivity implements DeoDungNua.FilmListener
                     e.printStackTrace();
                 }
             }
-        });
+        };
 
-        ListView lvSearchQueries = (ListView) findViewById(R.id.listSearchQueries);
-        assert lvSearchQueries != null;
-        lvSearchQueries.setAdapter(listAdapter);
-        lvSearchQueries.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String searchQuery = listAdapter.getItem(position);
-                mSearchQuery.setText(searchQuery);
+            public void onClick(View v) {
+                search.run();
             }
         });
+        mSearchQuery.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH
+                        || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    search.run();
+
+                    return true;
+                }
+
+                return false;
+            }
+        });
+
     }
 
     @Override
@@ -121,6 +147,13 @@ public class Search extends AppCompatActivity implements DeoDungNua.FilmListener
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        mSearchQuery.requestFocus();
     }
 
     @Override
