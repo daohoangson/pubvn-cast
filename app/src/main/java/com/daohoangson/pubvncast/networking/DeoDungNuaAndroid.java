@@ -154,7 +154,8 @@ public class DeoDungNuaAndroid {
                         media.url = response.getString("movieURL");
                         media.url = CorsProxy.buildUrl(media.url);
 
-                        if (response.has("subtitleURL")) {
+                        if (CorsProxy.isConfigured()
+                                && response.has("subtitleURL")) {
                             JSONObject responseSubtitles = response.getJSONObject("subtitleURL");
                             JSONArray names = responseSubtitles.names();
                             for (int i = 0, l = names.length(); i < l; i++) {

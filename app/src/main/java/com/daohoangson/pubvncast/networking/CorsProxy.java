@@ -8,8 +8,12 @@ import java.io.UnsupportedEncodingException;
 
 public class CorsProxy {
 
+    public static boolean isConfigured() {
+        return !TextUtils.isEmpty(BuildConfig.CORS_PROXY_URL);
+    }
+
     public static String buildUrl(String url) throws UnsupportedEncodingException {
-        if (TextUtils.isEmpty(BuildConfig.CORS_PROXY_URL)) {
+        if (!isConfigured()) {
             return url;
         }
 
