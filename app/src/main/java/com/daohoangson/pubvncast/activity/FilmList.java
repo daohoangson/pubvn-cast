@@ -13,13 +13,13 @@ import android.widget.ListView;
 
 import com.daohoangson.pubvncast.R;
 import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
-import com.daohoangson.pubvncast.networking.DeoDungNuaV2;
+import com.daohoangson.pubvncast.networking.DeoDungNua;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FilmList extends AppCompatActivity implements AdapterView.OnItemClickListener, DeoDungNuaV2.FilmListener<ArrayList<DeoDungNuaV2.Episode>> {
+public class FilmList extends AppCompatActivity implements AdapterView.OnItemClickListener, DeoDungNua.FilmListener<ArrayList<DeoDungNua.Episode>> {
 
     public static final String INTENT_EXTRA_ACCESS_TOKEN = "accessToken";
     public static final String INTENT_EXTRA_FILMS = "films";
@@ -46,14 +46,14 @@ public class FilmList extends AppCompatActivity implements AdapterView.OnItemCli
 
         mAccessToken = intent.getStringExtra(INTENT_EXTRA_ACCESS_TOKEN);
 
-        ArrayList<DeoDungNuaV2.Film> films = (ArrayList<DeoDungNuaV2.Film>) intent.getSerializableExtra(INTENT_EXTRA_FILMS);
+        ArrayList<DeoDungNua.Film> films = (ArrayList<DeoDungNua.Film>) intent.getSerializableExtra(INTENT_EXTRA_FILMS);
         mAdapter = new FilmAdapter(this, android.R.layout.simple_list_item_1, films);
         mList.setAdapter(mAdapter);
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        DeoDungNuaV2.Film film = mAdapter.getItem(position);
+        DeoDungNua.Film film = mAdapter.getItem(position);
         if (film == null) {
             return;
         }
@@ -70,15 +70,15 @@ public class FilmList extends AppCompatActivity implements AdapterView.OnItemCli
     }
 
     @Override
-    public void onFilm(ArrayList<DeoDungNuaV2.Episode> data) {
+    public void onFilm(ArrayList<DeoDungNua.Episode> data) {
         Intent episodeList = new Intent(this, EpisodeList.class);
         episodeList.putExtra(EpisodeList.INTENT_EXTRA_ACCESS_TOKEN, mAccessToken);
         episodeList.putExtra(EpisodeList.INTENT_EXTRA_EPISODES, data);
         startActivity(episodeList);
     }
 
-    private static class FilmAdapter extends ArrayAdapter<DeoDungNuaV2.Film> {
-        public FilmAdapter(Context context, int resource, List<DeoDungNuaV2.Film> objects) {
+    private static class FilmAdapter extends ArrayAdapter<DeoDungNua.Film> {
+        public FilmAdapter(Context context, int resource, List<DeoDungNua.Film> objects) {
             super(context, resource, objects);
         }
 

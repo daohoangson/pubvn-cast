@@ -21,7 +21,7 @@ public class DeoDungNuaAndroid {
 
     public static final String root = "http://deodungnua.bup.vn/api";
 
-    public static void login(final Context context, String username, String passwordMd5, final DeoDungNuaV2.FilmListener<String> listener) throws UnsupportedEncodingException {
+    public static void login(final Context context, String username, String passwordMd5, final DeoDungNua.FilmListener<String> listener) throws UnsupportedEncodingException {
         String url = String.format("%s/login/&username=%s&password=%s",
                 root,
                 URLEncoder.encode(username, "utf-8"),
@@ -51,7 +51,7 @@ public class DeoDungNuaAndroid {
         VolleyAbstract.getInstance(context).addToRequestQueue(request);
     }
 
-    public static void fetchFilms(final Context context, String searchQuery, String accessToken, final DeoDungNuaV2.FilmListener<ArrayList<DeoDungNuaV2.Film>> listener) throws UnsupportedEncodingException {
+    public static void fetchFilms(final Context context, String searchQuery, String accessToken, final DeoDungNua.FilmListener<ArrayList<DeoDungNua.Film>> listener) throws UnsupportedEncodingException {
         String url = String.format("%s/filmlist/&q=%s&accesstoken=%s",
                 root,
                 URLEncoder.encode(searchQuery, "utf-8"),
@@ -59,14 +59,14 @@ public class DeoDungNuaAndroid {
         JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                ArrayList<DeoDungNuaV2.Film> films = new ArrayList<>();
+                ArrayList<DeoDungNua.Film> films = new ArrayList<>();
 
                 if (response.has("phim")) {
                     try {
                         JSONArray responsePhim = response.getJSONArray("phim");
                         for (int i = 0, l = responsePhim.length(); i < l; i++) {
                             JSONObject responsePhimOne = responsePhim.getJSONObject(i);
-                            DeoDungNuaV2.Film film = new DeoDungNuaV2.Film();
+                            DeoDungNua.Film film = new DeoDungNua.Film();
                             film.id = responsePhimOne.getString("filmID");
                             film.name = responsePhimOne.getString("filmName");
                             film.thumb = responsePhimOne.getString("filmThumb");
@@ -90,7 +90,7 @@ public class DeoDungNuaAndroid {
         VolleyAbstract.getInstance(context).addToRequestQueue(request);
     }
 
-    public static void fetchEpisodes(final Context context, final DeoDungNuaV2.Film film, String accessToken, final DeoDungNuaV2.FilmListener<ArrayList<DeoDungNuaV2.Episode>> listener) throws UnsupportedEncodingException {
+    public static void fetchEpisodes(final Context context, final DeoDungNua.Film film, String accessToken, final DeoDungNua.FilmListener<ArrayList<DeoDungNua.Episode>> listener) throws UnsupportedEncodingException {
         String url = String.format("%s/filmdetail/&id=%s&accesstoken=%s",
                 root,
                 URLEncoder.encode(film.id, "utf-8"),
@@ -98,7 +98,7 @@ public class DeoDungNuaAndroid {
         JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                ArrayList<DeoDungNuaV2.Episode> episodes = new ArrayList<>();
+                ArrayList<DeoDungNua.Episode> episodes = new ArrayList<>();
 
                 if (response.has("phim")) {
                     try {
@@ -108,7 +108,7 @@ public class DeoDungNuaAndroid {
                             JSONArray responseEpsList = responsePhimOne.getJSONArray("epsList");
                             for (int i = 0, l = responseEpsList.length(); i < l; i++) {
                                 JSONObject responseEpisode = responseEpsList.getJSONObject(i);
-                                DeoDungNuaV2.Episode episode = new DeoDungNuaV2.Episode();
+                                DeoDungNua.Episode episode = new DeoDungNua.Episode();
                                 episode.film = film;
                                 episode.id = responseEpisode.getString("id");
                                 episode.name = responseEpisode.getString("name");
@@ -133,7 +133,7 @@ public class DeoDungNuaAndroid {
         VolleyAbstract.getInstance(context).addToRequestQueue(request);
     }
 
-    public static void fetchMedia(final Context context, final DeoDungNuaV2.Episode episode, String accessToken, final DeoDungNuaV2.FilmListener<DeoDungNuaV2.Media> listener) throws UnsupportedEncodingException {
+    public static void fetchMedia(final Context context, final DeoDungNua.Episode episode, String accessToken, final DeoDungNua.FilmListener<DeoDungNua.Media> listener) throws UnsupportedEncodingException {
         String url = String.format("http://pub.vn/api/android/&mov_id=%s&eps_id=%s&accesstoken=%s",
                 URLEncoder.encode(episode.film.id, "utf-8"),
                 URLEncoder.encode(episode.id, "utf-8"),
@@ -141,11 +141,11 @@ public class DeoDungNuaAndroid {
         JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                DeoDungNuaV2.Media completeMedia = null;
+                DeoDungNua.Media completeMedia = null;
 
                 if (response.has("movieURL")) {
                     try {
-                        DeoDungNuaV2.Media media = new DeoDungNuaV2.Media();
+                        DeoDungNua.Media media = new DeoDungNua.Media();
                         media.episode = episode;
                         media.url = response.getString("movieURL");
 //                        media.url = CorsProxy.buildUrl(media.url);
@@ -156,7 +156,7 @@ public class DeoDungNuaAndroid {
                             for (int i = 0, l = names.length(); i < l; i++) {
                                 String name = names.getString(i);
                                 JSONObject responseSubtitle = responseSubtitles.getJSONObject(name);
-                                DeoDungNuaV2.Subtitle subtitle = new DeoDungNuaV2.Subtitle();
+                                DeoDungNua.Subtitle subtitle = new DeoDungNua.Subtitle();
                                 subtitle.languageCode = "vietnam".equals(name) ? "vi" : "en";
                                 subtitle.languageName = responseSubtitle.getString("languageName");
                                 subtitle.url = PubvnDecodeSrt.buildUrl(responseSubtitle.getJSONObject("subtitleData").getString("bottom"));

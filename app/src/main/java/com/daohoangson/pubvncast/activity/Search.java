@@ -1,6 +1,7 @@
 package com.daohoangson.pubvncast.activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -10,12 +11,12 @@ import android.widget.EditText;
 
 import com.daohoangson.pubvncast.R;
 import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
-import com.daohoangson.pubvncast.networking.DeoDungNuaV2;
+import com.daohoangson.pubvncast.networking.DeoDungNua;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
-public class Search extends AppCompatActivity implements DeoDungNuaV2.FilmListener<ArrayList<DeoDungNuaV2.Film>> {
+public class Search extends AppCompatActivity implements DeoDungNua.FilmListener<ArrayList<DeoDungNua.Film>> {
 
     public static final int REQUEST_CODE_LOGIN = 1;
 
@@ -80,7 +81,7 @@ public class Search extends AppCompatActivity implements DeoDungNuaV2.FilmListen
     }
 
     @Override
-    public void onFilm(ArrayList<DeoDungNuaV2.Film> data) {
+    public void onFilm(ArrayList<DeoDungNua.Film> data) {
         Intent filmList = new Intent(this, FilmList.class);
         filmList.putExtra(FilmList.INTENT_EXTRA_ACCESS_TOKEN, mAccessToken.getText().toString());
         filmList.putExtra(FilmList.INTENT_EXTRA_FILMS, data);

@@ -21,7 +21,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.daohoangson.pubvncast.R;
-import com.daohoangson.pubvncast.networking.DeoDungNuaV2;
+import com.daohoangson.pubvncast.networking.DeoDungNua;
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.CastMediaControlIntent;
@@ -52,7 +52,7 @@ public class Player extends AppCompatActivity {
     private SeekBar mSeekBar;
     private Handler mSeekBarHandler;
     private Runnable mSeekBarRunner;
-    private DeoDungNuaV2.Media mMedia;
+    private DeoDungNua.Media mMedia;
 
     private MediaRouter mMediaRouter;
     private MediaRouteSelector mMediaRouteSelector;
@@ -179,7 +179,7 @@ public class Player extends AppCompatActivity {
         mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback, MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN);
 
         Intent intent = getIntent();
-        mMedia = (DeoDungNuaV2.Media) intent.getSerializableExtra(INTENT_EXTRA_MEDIA);
+        mMedia = (DeoDungNua.Media) intent.getSerializableExtra(INTENT_EXTRA_MEDIA);
         renderSubtitles();
         updateViews();
     }
@@ -264,15 +264,15 @@ public class Player extends AppCompatActivity {
             return new long[0];
         }
 
-        DeoDungNuaV2.Subtitle checkedSubtitle = null;
+        DeoDungNua.Subtitle checkedSubtitle = null;
         int checkedSubtitleRbId = mSubtitles.getCheckedRadioButtonId();
         if (checkedSubtitleRbId != -1) {
             RadioButton checkedSubtitleRb = (RadioButton) findViewById(checkedSubtitleRbId);
             assert checkedSubtitleRb != null;
             Object checkedSubtitleRbTag = checkedSubtitleRb.getTag();
             if (checkedSubtitleRbTag != null
-                    && checkedSubtitleRbTag instanceof DeoDungNuaV2.Subtitle) {
-                checkedSubtitle = (DeoDungNuaV2.Subtitle) checkedSubtitleRbTag;
+                    && checkedSubtitleRbTag instanceof DeoDungNua.Subtitle) {
+                checkedSubtitle = (DeoDungNua.Subtitle) checkedSubtitleRbTag;
             }
         }
 
@@ -301,7 +301,7 @@ public class Player extends AppCompatActivity {
 
         mMediaTracks = new ArrayList<>();
         for (int i = 0, l = mMedia.subtitles.size(); i < l; i++) {
-            DeoDungNuaV2.Subtitle subtitle = mMedia.subtitles.get(i);
+            DeoDungNua.Subtitle subtitle = mMedia.subtitles.get(i);
             MediaTrack subtitleTrack = new MediaTrack.Builder(i + 1, MediaTrack.TYPE_TEXT)
                     .setLanguage(subtitle.languageCode)
                     .setName(subtitle.languageName)
@@ -379,7 +379,7 @@ public class Player extends AppCompatActivity {
             mSubtitles.addView(rb);
 
             for (int i = 0, l = mMedia.subtitles.size(); i < l; i++) {
-                DeoDungNuaV2.Subtitle subtitle = mMedia.subtitles.get(i);
+                DeoDungNua.Subtitle subtitle = mMedia.subtitles.get(i);
                 rb = new RadioButton(this);
                 rb.setId(1 + i);
                 rb.setText(subtitle.languageName);

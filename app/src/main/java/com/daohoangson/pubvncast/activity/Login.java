@@ -11,11 +11,11 @@ import android.widget.EditText;
 
 import com.daohoangson.pubvncast.R;
 import com.daohoangson.pubvncast.networking.DeoDungNuaAndroid;
-import com.daohoangson.pubvncast.networking.DeoDungNuaV2;
+import com.daohoangson.pubvncast.networking.DeoDungNua;
 
 import java.io.UnsupportedEncodingException;
 
-public class Login extends AppCompatActivity implements DeoDungNuaV2.FilmListener<String> {
+public class Login extends AppCompatActivity implements DeoDungNua.FilmListener<String> {
 
     public static final String RESULT_ACCESS_TOKEN = "accessToken";
     public static final String PREF_USERNAME = "username";
