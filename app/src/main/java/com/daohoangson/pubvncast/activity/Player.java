@@ -25,6 +25,7 @@ import com.daohoangson.pubvncast.networking.DeoDungNua;
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.CastMediaControlIntent;
+import com.google.android.gms.cast.LaunchOptions;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaStatus;
 import com.google.android.gms.cast.MediaTrack;
@@ -39,14 +40,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class Player extends AppCompatActivity {
+public class Player extends AppCompatActivity implements RadioGroup.OnCheckedChangeListener {
 
     public static final String INTENT_EXTRA_MEDIA = "media";
 
     private TextView mMovie;
     private TextView mEpisode;
-    private RadioGroup mSubtitles;
-    private Button mPlay;
+    private RadioGroup mMediaTracks;
+    private Button mControl;
     private LinearLayout mPanePlaying;
     private TextView mElapsed;
     private SeekBar mSeekBar;
@@ -61,11 +62,11 @@ public class Player extends AppCompatActivity {
     private GoogleApiClient mApiClient;
     private RemoteMediaPlayer mRemoteMediaPlayer;
     private Cast.Listener mCastClientListener;
-    private List<MediaTrack> mMediaTracks;
     private boolean mWaitingForReconnect = false;
-    private boolean mApplicationStarted = false;
-    private boolean mVideoIsLoaded;
-    private boolean mIsPlaying;
+    private ApplicationState mApplicationState = ApplicationState.DISCONNECTED;
+    private boolean mVideoIsLoaded = false;
+    private boolean mWaitingForMetadata = false;
+    private boolean mIsPlaying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,23 +76,10 @@ public class Player extends AppCompatActivity {
         mMovie = (TextView) findViewById(R.id.txtMovie);
         mEpisode = (TextView) findViewById(R.id.txtEpisode);
 
-        mSubtitles = (RadioGroup) findViewById(R.id.rgSubtitles);
-        mSubtitles.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if (mRemoteMediaPlayer == null
-                        || mApiClient == null
-                        || !mVideoIsLoaded) {
-                    return;
-                }
+        mMediaTracks = (RadioGroup) findViewById(R.id.rgMediaTracks);
 
-                long[] trackIds = getActiveTrackIds();
-                mRemoteMediaPlayer.setActiveMediaTracks(mApiClient, trackIds);
-            }
-        });
-
-        mPlay = (Button) findViewById(R.id.btnPlay);
-        mPlay.setOnClickListener(new View.OnClickListener() {
+        mControl = (Button) findViewById(R.id.btnControl);
+        mControl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!mVideoIsLoaded) {
@@ -105,6 +93,13 @@ public class Player extends AppCompatActivity {
 
                     updateViews();
                 }
+            }
+        });
+        mControl.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                startVideo();
+                return true;
             }
         });
 
@@ -149,7 +144,7 @@ public class Player extends AppCompatActivity {
                 int elapsed = (int) (mRemoteMediaPlayer.getApproximateStreamPosition() / 1000);
 
                 int seconds = elapsed % 60;
-                int minutes = (elapsed - seconds) / 60;
+                int minutes = ((elapsed - seconds) / 60) % 60;
                 int hours = (elapsed - seconds - minutes * 60) / 3600;
                 mElapsed.setText(String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds));
 
@@ -180,7 +175,7 @@ public class Player extends AppCompatActivity {
 
         Intent intent = getIntent();
         mMedia = (DeoDungNua.Media) intent.getSerializableExtra(INTENT_EXTRA_MEDIA);
-        renderSubtitles();
+        prepareMediaTracks();
         updateViews();
     }
 
@@ -190,6 +185,18 @@ public class Player extends AppCompatActivity {
             mMediaRouter.removeCallback(mMediaRouterCallback);
         }
         super.onPause();
+    }
+
+    @Override
+    public void onCheckedChanged(RadioGroup group, int checkedId) {
+        if (mRemoteMediaPlayer == null
+                || mApiClient == null
+                || !mVideoIsLoaded) {
+            return;
+        }
+
+        long[] trackIds = getActiveTrackIds();
+        mRemoteMediaPlayer.setActiveMediaTracks(mApiClient, trackIds);
     }
 
     private void initMediaRouter() {
@@ -224,6 +231,10 @@ public class Player extends AppCompatActivity {
             @Override
             public void onStatusUpdated() {
                 MediaStatus mediaStatus = mRemoteMediaPlayer.getMediaStatus();
+                if (mediaStatus == null) {
+                    return;
+                }
+
                 mIsPlaying = mediaStatus.getPlayerState() == MediaStatus.PLAYER_STATE_PLAYING;
 
                 updateViews();
@@ -237,6 +248,20 @@ public class Player extends AppCompatActivity {
         mRemoteMediaPlayer.setOnMetadataUpdatedListener(new RemoteMediaPlayer.OnMetadataUpdatedListener() {
             @Override
             public void onMetadataUpdated() {
+                MediaInfo mediaInfo = mRemoteMediaPlayer.getMediaInfo();
+                if (mediaInfo == null) {
+                    return;
+                }
+
+                if (mediaInfo.getContentId() != null) {
+                    mVideoIsLoaded = true;
+                }
+
+                if (mWaitingForMetadata) {
+                    prepareMediaTracks();
+                    updateViews();
+                    mWaitingForMetadata = false;
+                }
             }
         });
 
@@ -259,29 +284,26 @@ public class Player extends AppCompatActivity {
     }
 
     private long[] getActiveTrackIds() {
-        if (mSubtitles == null
-                || mMediaTracks == null) {
+        if (mMediaTracks == null) {
             return new long[0];
         }
 
-        DeoDungNua.Subtitle checkedSubtitle = null;
-        int checkedSubtitleRbId = mSubtitles.getCheckedRadioButtonId();
-        if (checkedSubtitleRbId != -1) {
-            RadioButton checkedSubtitleRb = (RadioButton) findViewById(checkedSubtitleRbId);
-            assert checkedSubtitleRb != null;
-            Object checkedSubtitleRbTag = checkedSubtitleRb.getTag();
-            if (checkedSubtitleRbTag != null
-                    && checkedSubtitleRbTag instanceof DeoDungNua.Subtitle) {
-                checkedSubtitle = (DeoDungNua.Subtitle) checkedSubtitleRbTag;
+        List<MediaTrack> activeTracks = new ArrayList<>();
+        MediaTrack checkedMediaTrack = null;
+        int checkedRbId = mMediaTracks.getCheckedRadioButtonId();
+        RadioButton checkedRadioButton = (RadioButton) findViewById(checkedRbId);
+        if (checkedRadioButton != null) {
+            Object checkedTag = checkedRadioButton.getTag();
+            if (checkedTag != null) {
+                if (checkedTag instanceof MediaTrack) {
+                    checkedMediaTrack = (MediaTrack) checkedTag;
+                }
             }
         }
 
-        List<MediaTrack> activeTracks = new ArrayList<>();
-        for (MediaTrack mediaTrack : mMediaTracks) {
-            if (checkedSubtitle != null
-                    && mediaTrack.getContentId().equals(checkedSubtitle.url)) {
-                activeTracks.add(mediaTrack);
-            }
+        if (mApplicationState == ApplicationState.JOINED
+                && checkedMediaTrack != null) {
+            activeTracks.add(checkedMediaTrack);
         }
 
         long[] activeTrackIds = new long[activeTracks.size()];
@@ -299,22 +321,25 @@ public class Player extends AppCompatActivity {
             return;
         }
 
-        mMediaTracks = new ArrayList<>();
-        for (int i = 0, l = mMedia.subtitles.size(); i < l; i++) {
-            DeoDungNua.Subtitle subtitle = mMedia.subtitles.get(i);
-            MediaTrack subtitleTrack = new MediaTrack.Builder(i + 1, MediaTrack.TYPE_TEXT)
-                    .setLanguage(subtitle.languageCode)
-                    .setName(subtitle.languageName)
-                    .setSubtype(MediaTrack.SUBTYPE_SUBTITLES)
-                    .setContentId(subtitle.url)
-                    .build();
-            mMediaTracks.add(subtitleTrack);
+        mApplicationState = ApplicationState.STARTED;
+        prepareMediaTracks();
+
+        ArrayList<MediaTrack> mediaTracks = new ArrayList<>();
+        for (int i = 0, l = mMediaTracks.getChildCount(); i < l; i++) {
+            View view = mMediaTracks.getChildAt(i);
+            if (view instanceof RadioButton) {
+                RadioButton rb = (RadioButton) view;
+                Object tag = rb.getTag();
+                if (tag instanceof MediaTrack) {
+                    mediaTracks.add((MediaTrack) tag);
+                }
+            }
         }
 
         MediaInfo mediaInfo = new MediaInfo.Builder(mMedia.url)
                 .setContentType("video/mp4")
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-                .setMediaTracks(mMediaTracks)
+                .setMediaTracks(mediaTracks)
                 .build();
 
         long[] activeTrackIds = getActiveTrackIds();
@@ -333,7 +358,6 @@ public class Player extends AppCompatActivity {
 
     private void reconnectChannels(Bundle hint) {
         if ((hint != null) && hint.getBoolean(Cast.EXTRA_APP_NO_LONGER_RUNNING)) {
-            //Log.e( TAG, "App is no longer running" );
             teardown();
         } else {
             try {
@@ -346,17 +370,17 @@ public class Player extends AppCompatActivity {
 
     private void teardown() {
         if (mApiClient != null) {
-            if (mApplicationStarted) {
-                try {
-                    Cast.CastApi.stopApplication(mApiClient);
-                    if (mRemoteMediaPlayer != null) {
+            if (mApplicationState != ApplicationState.DISCONNECTED) {
+                Cast.CastApi.stopApplication(mApiClient);
+                if (mRemoteMediaPlayer != null) {
+                    try {
                         Cast.CastApi.removeMessageReceivedCallbacks(mApiClient, mRemoteMediaPlayer.getNamespace());
-                        mRemoteMediaPlayer = null;
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                } catch (IOException e) {
-                    //Log.e( TAG, "Exception while removing application " + e );
+                    mRemoteMediaPlayer = null;
                 }
-                mApplicationStarted = false;
+                mApplicationState = ApplicationState.DISCONNECTED;
             }
             if (mApiClient.isConnected())
                 mApiClient.disconnect();
@@ -368,28 +392,72 @@ public class Player extends AppCompatActivity {
         updateViews();
     }
 
-    private void renderSubtitles() {
-        if (mMedia.subtitles.size() > 0) {
-            mSubtitles.removeAllViews();
+    private void prepareMediaTracks() {
+        if (mApplicationState == ApplicationState.JOINED
+                && mRemoteMediaPlayer != null) {
+            MediaInfo mediaInfo = mRemoteMediaPlayer.getMediaInfo();
+            if (mediaInfo != null) {
+                mMediaTracks.setOnCheckedChangeListener(null);
+                mMediaTracks.removeAllViews();
+
+                RadioButton rb = new RadioButton(this);
+                rb.setId(0);
+                rb.setText(R.string.no_subtitle);
+                rb.setChecked(true);
+                mMediaTracks.addView(rb);
+
+                for (MediaTrack mediaTrack : mediaInfo.getMediaTracks()) {
+                    rb = new RadioButton(this);
+                    rb.setId(1 + (int) mediaTrack.getId());
+                    rb.setText(mediaTrack.getContentId());
+                    rb.setTag(mediaTrack);
+
+                    mMediaTracks.addView(rb);
+                }
+
+                mMediaTracks.setOnCheckedChangeListener(this);
+                mMediaTracks.setVisibility(View.VISIBLE);
+
+                return;
+            }
+        }
+
+        if (mApplicationState != ApplicationState.JOINED
+                && mMedia != null
+                && mMedia.subtitles.size() > 0) {
+            mMediaTracks.setOnCheckedChangeListener(null);
+            mMediaTracks.removeAllViews();
 
             RadioButton rb = new RadioButton(this);
             rb.setId(0);
             rb.setText(R.string.no_subtitle);
             rb.setChecked(true);
-            mSubtitles.addView(rb);
+            mMediaTracks.addView(rb);
 
             for (int i = 0, l = mMedia.subtitles.size(); i < l; i++) {
                 DeoDungNua.Subtitle subtitle = mMedia.subtitles.get(i);
+                MediaTrack subtitleTrack = new MediaTrack.Builder(i + 1, MediaTrack.TYPE_TEXT)
+                        .setLanguage(subtitle.languageCode)
+                        .setName(subtitle.languageName)
+                        .setSubtype(MediaTrack.SUBTYPE_SUBTITLES)
+                        .setContentId(subtitle.url)
+                        .build();
+
                 rb = new RadioButton(this);
                 rb.setId(1 + i);
-                rb.setText(subtitle.languageName);
-                rb.setTag(subtitle);
+                rb.setText(subtitleTrack.getName());
+                rb.setTag(subtitleTrack);
 
-                mSubtitles.addView(rb);
+                mMediaTracks.addView(rb);
             }
-        } else {
-            mSubtitles.setVisibility(View.GONE);
+
+            mMediaTracks.setOnCheckedChangeListener(this);
+            mMediaTracks.setVisibility(View.VISIBLE);
+
+            return;
         }
+
+        mMediaTracks.setVisibility(View.GONE);
     }
 
     private void updateViews() {
@@ -399,35 +467,60 @@ public class Player extends AppCompatActivity {
             setTitle(getString(R.string.app_name));
         }
 
-        if (mMedia != null) {
-            mMovie.setText(mMedia.episode.film.name);
-            mEpisode.setText(mMedia.episode.name);
+        String movieName = null;
+        String episodeName = null;
+        switch (mApplicationState) {
+            case JOINED:
+                if (mRemoteMediaPlayer != null) {
+                    MediaInfo mediaInfo = mRemoteMediaPlayer.getMediaInfo();
+                    if (mediaInfo != null) {
+                        movieName = mediaInfo.getContentType();
+                        episodeName = mediaInfo.getContentId();
+                    }
+                }
+                break;
+            default:
+                if (mMedia != null) {
+                    movieName = mMedia.episode.film.name;
+                    episodeName = mMedia.episode.name;
+                }
+        }
+
+        if (movieName != null && episodeName != null) {
+            mMovie.setText(movieName);
+            mEpisode.setText(episodeName);
 
             if (mRemoteMediaPlayer != null) {
                 if (!mVideoIsLoaded) {
-                    mPlay.setText(getString(R.string.play_video));
+                    mControl.setText(getString(R.string.play_video));
                     mPanePlaying.setVisibility(View.GONE);
                 } else if (mIsPlaying) {
-                    mPlay.setText(getString(R.string.pause_video));
+                    mControl.setText(getString(R.string.pause_video));
                     mSeekBar.setMax((int) (mRemoteMediaPlayer.getStreamDuration() / 1000));
                     mPanePlaying.setVisibility(View.VISIBLE);
                 } else {
-                    mPlay.setText(getString(R.string.resume_video));
+                    mControl.setText(getString(R.string.resume_video));
                     mPanePlaying.setVisibility(View.GONE);
                 }
-                mPlay.setEnabled(true);
+                mControl.setEnabled(true);
             } else {
-                mPlay.setText(getString(R.string.play_video));
-                mPlay.setEnabled(false);
+                mControl.setText(getString(R.string.play_video));
+                mControl.setEnabled(false);
                 mPanePlaying.setVisibility(View.GONE);
             }
         } else {
             mMovie.setText("");
             mEpisode.setText("");
-            mPlay.setText(getString(R.string.play_video));
-            mPlay.setEnabled(false);
+            mControl.setText(getString(R.string.play_video));
+            mControl.setEnabled(false);
             mPanePlaying.setVisibility(View.GONE);
         }
+    }
+
+    private enum ApplicationState {
+        DISCONNECTED,
+        STARTED,
+        JOINED
     }
 
     private class MediaRouterCallback extends MediaRouter.Callback {
@@ -446,9 +539,6 @@ public class Player extends AppCompatActivity {
         @Override
         public void onRouteUnselected(MediaRouter router, MediaRouter.RouteInfo info) {
             teardown();
-            mSelectedDevice = null;
-            mVideoIsLoaded = false;
-
             updateViews();
         }
     }
@@ -461,24 +551,31 @@ public class Player extends AppCompatActivity {
                 mWaitingForReconnect = false;
                 reconnectChannels(hint);
             } else {
-                try {
-                    Cast.CastApi.launchApplication(mApiClient, getString(R.string.cast_app_id))
-                            .setResultCallback(
-                                    new ResultCallback<Cast.ApplicationConnectionResult>() {
-                                        @Override
-                                        public void onResult(
-                                                @NonNull Cast.ApplicationConnectionResult applicationConnectionResult) {
-                                            Status status = applicationConnectionResult.getStatus();
-                                            if (status.isSuccess()) {
-                                                mApplicationStarted = true;
-                                                reconnectChannels(null);
+                LaunchOptions launchOptions = new LaunchOptions.Builder()
+                        .setRelaunchIfRunning(false)
+                        .build();
+
+                Cast.CastApi.launchApplication(mApiClient, getString(R.string.cast_app_id), launchOptions)
+                        .setResultCallback(
+                                new ResultCallback<Cast.ApplicationConnectionResult>() {
+                                    @Override
+                                    public void onResult(
+                                            @NonNull Cast.ApplicationConnectionResult applicationConnectionResult) {
+                                        Status status = applicationConnectionResult.getStatus();
+                                        if (status.isSuccess()) {
+                                            if (Cast.CastApi.getApplicationStatus(mApiClient) != null) {
+                                                mApplicationState = ApplicationState.JOINED;
+                                                mWaitingForMetadata = true;
+                                                mRemoteMediaPlayer.requestStatus(mApiClient);
+                                            } else {
+                                                mApplicationState = ApplicationState.STARTED;
                                             }
+
+                                            reconnectChannels(null);
                                         }
                                     }
-                            );
-                } catch (Exception ignored) {
-
-                }
+                                }
+                        );
             }
         }
 

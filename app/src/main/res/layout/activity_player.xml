@@ -26,16 +26,16 @@
         tools:text="Episode" />
 
     <RadioGroup
-        android:id="@+id/rgSubtitles"
+        android:id="@+id/rgMediaTracks"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/txtEpisode" />
 
     <Button
-        android:id="@+id/btnPlay"
+        android:id="@+id/btnControl"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/rgSubtitles"
+        android:layout_below="@+id/rgMediaTracks"
         android:layout_centerHorizontal="true"
         android:text="@string/play_video" />
 
@@ -43,7 +43,7 @@
         android:id="@+id/panePlaying"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btnPlay">
+        android:layout_below="@+id/btnControl">
 
         <TextView
             android:id="@+id/txtElapsed"

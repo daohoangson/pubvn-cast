@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
@@ -132,6 +134,24 @@ public class Search extends Networking implements DeoDungNua.FilmListener<ArrayL
             }
         });
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.search, menu);
+        MenuItem playerMenuItem = menu.findItem(R.id.player_menu_item);
+        playerMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent player = new Intent(Search.this, Player.class);
+                startActivity(player);
+
+                return true;
+            }
+        });
+
+        return true;
     }
 
     @Override
